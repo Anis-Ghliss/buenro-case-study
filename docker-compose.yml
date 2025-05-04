@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: data-ingestion-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: data-ingestion
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongodb_data:/data/db
+    command: ["--auth"]
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+
+volumes:
+  mongodb_data:
+    driver: local
