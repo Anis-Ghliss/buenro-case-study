@@ -171,6 +171,11 @@ sources:
 ```bash
 pnpm install
 ```
+### Running the local database
+
+```bash
+docker-compose up -d
+```
 
 ### Running the API Server
 
