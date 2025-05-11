@@ -45,6 +45,7 @@ export class IngestionService {
   }
 
   private async processSourcesInBackground(): Promise<void> {
+    
     try {
       const sources = this.sourceConfigService.getAllSourceConfigs();
 

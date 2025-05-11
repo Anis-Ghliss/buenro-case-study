@@ -13,7 +13,7 @@
 - name: "source2"
   bucket: "source-2"
   prefix: "s2"
-  bucketUrl: "https://buenro-tech-assessment-materials.s3.eu-north-_generated_data.json"
+  bucketUrl: "https://buenro-tech-assessment-materials.s3.eu-north-1.amazonaws.com/large_generated_data.json"
   mapping:
     id: "id"
     city: "city"
