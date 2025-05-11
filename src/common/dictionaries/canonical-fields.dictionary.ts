@@ -19,7 +19,7 @@ export const CANONICAL_FIELDS: Record<string, CanonicalFieldDefinition> = {
   name: {
     type: 'string',
     required: false,
-    transform: (value: any) =>  String(value).trim(),
+    transform: (value: any) => String(value).trim(),
   },
   country: {
     type: 'string',
@@ -33,7 +33,9 @@ export const CANONICAL_FIELDS: Record<string, CanonicalFieldDefinition> = {
       if (typeof value === 'boolean') return value;
       if (typeof value === 'string') {
         const lowerValue = value.toLowerCase();
-        return lowerValue === 'true' || lowerValue === 'yes' || lowerValue === '1';
+        return (
+          lowerValue === 'true' || lowerValue === 'yes' || lowerValue === '1'
+        );
       }
       if (typeof value === 'number') return value === 1;
       return false;
@@ -64,5 +66,4 @@ export const CANONICAL_FIELDS: Record<string, CanonicalFieldDefinition> = {
       return 'medium';
     },
   },
-  
-}; 
+};

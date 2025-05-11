@@ -14,11 +14,9 @@ export class DataSourceService {
   private readonly logger = new Logger(DataSourceService.name);
   private readonly s3Client: S3Client;
 
-  constructor(
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     const config = this.configService.get<AppConfig>('app');
-    
+
     this.s3Client = new S3Client({
       region: config.s3.region,
       credentials: {
@@ -26,41 +24,53 @@ export class DataSourceService {
         secretAccessKey: config.s3.secretAccessKey,
       },
       endpoint: config.s3.endpoint,
-      
     });
   }
 
   getSourceConfig(sourceName: string): SourceConfig {
     const config = this.configService.get<AppConfig>('app');
-    this.logger.debug(`Available sources: ${JSON.stringify(config.sources.map(s => ({
-      name: s.name,
-      bucket: s.bucket,
-      prefix: s.prefix,
-      bucketUrl: s.bucketUrl,
-    })))}`);
+    this.logger.debug(
+      `Available sources: ${JSON.stringify(
+        config.sources.map((s) => ({
+          name: s.name,
+          bucket: s.bucket,
+          prefix: s.prefix,
+          bucketUrl: s.bucketUrl,
+        })),
+      )}`,
+    );
 
-    const sourceConfig = config.sources.find(s => s.name === sourceName);
+    const sourceConfig = config.sources.find((s) => s.name === sourceName);
     if (!sourceConfig) {
       throw new Error(`Source configuration not found for ${sourceName}`);
     }
 
-    this.logger.debug(`Using source configuration: ${JSON.stringify({
-      name: sourceConfig.name,
-      bucket: sourceConfig.bucket,
-      prefix: sourceConfig.prefix,
-      bucketUrl: sourceConfig.bucketUrl,
-    })}`);
+    this.logger.debug(
+      `Using source configuration: ${JSON.stringify({
+        name: sourceConfig.name,
+        bucket: sourceConfig.bucket,
+        prefix: sourceConfig.prefix,
+        bucketUrl: sourceConfig.bucketUrl,
+      })}`,
+    );
 
     return sourceConfig;
   }
 
-  async getObjectStream(sourceName: string, fileKey: string): Promise<Readable> {
+  async getObjectStream(
+    sourceName: string,
+    fileKey: string,
+  ): Promise<Readable> {
     try {
       const sourceConfig = this.getSourceConfig(sourceName);
-      
+
       if (sourceConfig.bucketUrl.startsWith('http')) {
-        this.logger.debug('Fetching from HTTP URL:', { url: sourceConfig.bucketUrl });
-        const response = await axios.get(sourceConfig.bucketUrl, { responseType: 'stream' });
+        this.logger.debug('Fetching from HTTP URL:', {
+          url: sourceConfig.bucketUrl,
+        });
+        const response = await axios.get(sourceConfig.bucketUrl, {
+          responseType: 'stream',
+        });
         return response.data;
       }
 
@@ -100,7 +110,7 @@ export class DataSourceService {
   async *processStream(stream: Readable, batchSize: number) {
     const pipeline = this.createStreamPipeline(stream, batchSize);
     let buffer: any[] = [];
-    
+
     for await (const data of pipeline) {
       try {
         buffer.push(data);
@@ -119,4 +129,4 @@ export class DataSourceService {
       yield buffer;
     }
   }
-} 
+}

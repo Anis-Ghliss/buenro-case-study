@@ -33,4 +33,4 @@ export class Unified extends Document {
 
 export const UnifiedSchema = SchemaFactory.createForClass(Unified);
 
-UnifiedSchema.index({ city: 1, isAvailable: 1 }); 
+UnifiedSchema.index({ city: 1, isAvailable: 1 });

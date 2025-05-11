@@ -19,7 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "start:api": "ts-node src/api/api.ts --watch",
-    "start:worker": "ts-node src/worker/worker-bootstrap.ts"
+    "start:worker": "ts-node -r tsconfig-paths/register src/worker/worker-bootstrap.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.802.0",

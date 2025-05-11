@@ -1,7 +1,7 @@
 - name: "source1"
   bucket: "source-1"
-  prefix: ""
-  bucketUrl: ""
+  prefix: "s1"
+  bucketUrl: "https://buenro-tech-assessment-materials.s3.eu-north-1.amazonaws.com/structured_generated_data.json"
   mapping:
     id: "id"
     name: "name"
@@ -12,8 +12,8 @@
 
 - name: "source2"
   bucket: "source-2"
-  prefix: ""
-  bucketUrl: ""
+  prefix: "s2"
+  bucketUrl: "https://buenro-tech-assessment-materials.s3.eu-north-_generated_data.json"
   mapping:
     id: "id"
     city: "city"

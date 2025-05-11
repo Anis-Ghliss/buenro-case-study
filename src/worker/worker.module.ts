@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Unified, UnifiedSchema } from '../common/persistence/schemas/unified.schema';
+import {
+  Unified,
+  UnifiedSchema,
+} from '../common/persistence/schemas/unified.schema';
 import { DataSourceService } from './data-source/data-source.service';
 import { PersistenceService } from '../common/persistence/persistence.service';
 import { IngestionService } from './ingestion/ingestion.service';
@@ -28,9 +31,7 @@ import { TransformationService } from './transformation/transformation.service';
         authSource: process.env.MONGODB_AUTH_SOURCE,
       }),
     }),
-    MongooseModule.forFeature([
-      { name: Unified.name, schema: UnifiedSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Unified.name, schema: UnifiedSchema }]),
   ],
   providers: [
     DataSourceService,
@@ -42,4 +43,4 @@ import { TransformationService } from './transformation/transformation.service';
     ErrorHandlingService,
   ],
 })
-export class WorkerModule {} 
+export class WorkerModule {}

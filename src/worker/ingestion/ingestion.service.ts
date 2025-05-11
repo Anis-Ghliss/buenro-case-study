@@ -8,6 +8,7 @@ import { UnifiedData } from '../../common/schemas/unified.schema';
 import { SourceConfigService } from '../../config/source-config.service';
 import { ErrorHandlingService } from '../../common/services/error-handling.service';
 import { TransformationService } from '../transformation/transformation.service';
+import { performance } from 'perf_hooks';
 
 @Injectable()
 export class IngestionService {
@@ -24,17 +25,20 @@ export class IngestionService {
 
   async startIngestion(): Promise<void> {
     if (this.isIngestionRunning) {
-      this.errorHandlingService.handleInfo('Ingestion is already running', 'IngestionService.startIngestion');
+      this.errorHandlingService.handleInfo(
+        'Ingestion is already running',
+        'IngestionService.startIngestion',
+      );
       return;
     }
 
     this.isIngestionRunning = true;
-    
-    this.processSourcesInBackground().catch(error => {
+
+    this.processSourcesInBackground().catch((error) => {
       this.errorHandlingService.handleError(
         error,
         'IngestionService.startIngestion',
-        { error: 'Background ingestion failed' }
+        { error: 'Background ingestion failed' },
       );
       this.isIngestionRunning = false;
     });
@@ -43,13 +47,19 @@ export class IngestionService {
   private async processSourcesInBackground(): Promise<void> {
     try {
       const sources = this.sourceConfigService.getAllSourceConfigs();
-      
+
       if (!sources || sources.length === 0) {
-        this.errorHandlingService.handleInfo('No sources configured in sources.yaml', 'IngestionService.processSourcesInBackground');
+        this.errorHandlingService.handleInfo(
+          'No sources configured in sources.yaml',
+          'IngestionService.processSourcesInBackground',
+        );
         return;
       }
 
-      this.errorHandlingService.handleInfo(`Found ${sources.length} sources to process`, 'IngestionService.processSourcesInBackground');
+      this.errorHandlingService.handleInfo(
+        `Found ${sources.length} sources to process`,
+        'IngestionService.processSourcesInBackground',
+      );
 
       for (const source of sources) {
         try {
@@ -58,7 +68,7 @@ export class IngestionService {
           this.errorHandlingService.handleError(
             error,
             'IngestionService.processSourcesInBackground',
-            { sourceName: source.name }
+            { sourceName: source.name },
           );
           continue;
         }
@@ -67,34 +77,49 @@ export class IngestionService {
       this.errorHandlingService.handleError(
         error,
         'IngestionService.processSourcesInBackground',
-        { error: 'Auto ingestion failed' }
+        { error: 'Auto ingestion failed' },
       );
     } finally {
       this.isIngestionRunning = false;
+      // const end = performance.now();
+      // const durationSeconds = ((end - start) / 1000).toFixed(2);
+
+      // this.errorHandlingService.handleInfo(
+      //   `Ingestion completed in ${durationSeconds} seconds`,
+      //   'IngestionService.processSourcesInBackground',
+      // );
+
+      // this.isIngestionRunning = false;
     }
   }
 
   private async processSource(source: SourceConfig): Promise<void> {
-    this.errorHandlingService.handleInfo(`Processing source: ${source.name}`, 'IngestionService.processSource');
+    this.errorHandlingService.handleInfo(
+      `Processing source: ${source.name}`,
+      'IngestionService.processSource',
+    );
 
     const fileKey = source.bucketUrl.split('/').pop();
     if (!fileKey) {
       this.errorHandlingService.handleWarning(
         `No file key found in bucketUrl for source ${source.name}`,
         'IngestionService.processSource',
-        { sourceName: source.name }
+        { sourceName: source.name },
       );
       return;
     }
 
     try {
       await this.ingestFromSource(source.name, fileKey);
-      this.errorHandlingService.handleInfo(`Successfully processed source ${source.name}`, 'IngestionService.processSource');
+      this.errorHandlingService.handleInfo(
+        `Successfully processed source ${source.name}`,
+        'IngestionService.processSource',
+      );
     } catch (error) {
       this.errorHandlingService.handleError(
         error,
         'IngestionService.processSource',
-        { sourceName: source.name }
+        { sourceName: source.name },
       );
     }
   }
@@ -106,13 +131,22 @@ export class IngestionService {
 
       this.errorHandlingService.handleInfo(
         `Starting ingestion from ${sourceName} for file ${fileKey}`,
-        'IngestionService.ingestFromSource'
+        'IngestionService.ingestFromSource',
       );
 
-      const stream = await this.dataSourceService.getObjectStream(sourceName, fileKey);
+      const stream = await this.dataSourceService.getObjectStream(
+        sourceName,
+        fileKey,
+      );
 
-      for await (const batch of this.dataSourceService.processStream(stream, config.batchSize)) {
-        const transformedData = this.transformationService.transformBatch(sourceName, batch);
+      for await (const batch of this.dataSourceService.processStream(
+        stream,
+        config.batchSize,
+      )) {
+        const transformedData = this.transformationService.transformBatch(
+          sourceName,
+          batch,
+        );
 
         if (transformedData.length > 0) {
           await this.persistenceService.saveBatch(transformedData);
@@ -121,13 +155,13 @@ export class IngestionService {
 
       this.errorHandlingService.handleInfo(
         `Completed ingestion from ${sourceName} for file ${fileKey}`,
-        'IngestionService.ingestFromSource'
+        'IngestionService.ingestFromSource',
       );
     } catch (error) {
       this.errorHandlingService.handleError(
         error,
         'IngestionService.ingestFromSource',
-        { sourceName, fileKey }
+        { sourceName, fileKey },
       );
       throw error;
     }
@@ -135,22 +169,38 @@ export class IngestionService {
 
   async ingestData(sourceName: string): Promise<void> {
     try {
-      this.errorHandlingService.handleInfo(`Starting ingestion for source: ${sourceName}`, 'IngestionService.ingestData');
-      
+      this.errorHandlingService.handleInfo(
+        `Starting ingestion for source: ${sourceName}`,
+        'IngestionService.ingestData',
+      );
+
       const sourceConfig = this.dataSourceService.getSourceConfig(sourceName);
-      const stream = await this.dataSourceService.getObjectStream(sourceName, sourceConfig.prefix);
-      
-      for await (const batch of this.dataSourceService.processStream(stream, 100)) {
-        const transformedData = batch.map(item => this.transformData(item, sourceConfig.mapping));
-        await this.persistenceService.saveBatch(transformedData as UnifiedData[]);
+      const stream = await this.dataSourceService.getObjectStream(
+        sourceName,
+        sourceConfig.prefix,
+      );
+
+      for await (const batch of this.dataSourceService.processStream(
+        stream,
+        100,
+      )) {
+        const transformedData = batch.map((item) =>
+          this.transformData(item, sourceConfig.mapping),
+        );
+        await this.persistenceService.saveBatch(
+          transformedData as UnifiedData[],
+        );
       }
-      
-      this.errorHandlingService.handleInfo(`Completed ingestion for source: ${sourceName}`, 'IngestionService.ingestData');
+
+      this.errorHandlingService.handleInfo(
+        `Completed ingestion for source: ${sourceName}`,
+        'IngestionService.ingestData',
+      );
     } catch (error) {
       this.errorHandlingService.handleError(
         error,
         'IngestionService.ingestData',
-        { sourceName }
+        { sourceName },
       );
       throw error;
     }
@@ -158,13 +208,13 @@ export class IngestionService {
 
   private transformData(data: any, mapping: Record<string, string>): Unified {
     const transformed: any = {};
-    
+
     for (const [canonicalField, sourceField] of Object.entries(mapping)) {
       if (data[sourceField] !== undefined) {
         transformed[canonicalField] = data[sourceField];
       }
     }
-    
+
     return transformed as Unified;
   }
 }
